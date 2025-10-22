@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Code Editor — Hacker's Hideout</title>
+<link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body class="bg-gray-900 text-gray-100 min-h-screen">
+<header class="p-4 neon-glow"><h1 class="text-green-300 font-bold">Code Editor</h1></header>
+<main class="p-6 max-w-6xl mx-auto">
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div>
+      <label class="block text-sm text-gray-300">HTML</label>
+      <textarea id="html" class="w-full h-40 bg-gray-800 text-gray-100 rounded p-2"></textarea>
+      <label class="block text-sm text-gray-300 mt-2">CSS</label>
+      <textarea id="css" class="w-full h-24 bg-gray-800 text-gray-100 rounded p-2"></textarea>
+      <label class="block text-sm text-gray-300 mt-2">JS</label>
+      <textarea id="js" class="w-full h-24 bg-gray-800 text-gray-100 rounded p-2"></textarea>
+      <button id="runBtn" class="mt-3 px-4 py-2 bg-green-600 rounded">Run</button>
+    </div>
+    <div>
+      <iframe id="preview" class="w-full h-full min-h-[360px] bg-white rounded"></iframe>
+    </div>
+  </div>
+</main>
+<script>
+document.getElementById('runBtn').addEventListener('click', ()=>{
+  const html = document.getElementById('html').value;
+  const css = '<style>'+document.getElementById('css').value+'</style>';
+  const js = '<script>'+document.getElementById('js').value+'<\/script>';
+  const src = html + css + js;
+  const iframe = document.getElementById('preview');
+  iframe.srcdoc = src;
+});
+</script>
+</body>
+</html>

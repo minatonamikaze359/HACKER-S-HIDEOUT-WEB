@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en" class="dark">
+<head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>AI Tools — Hacker's Hideout</title>
+<link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body class="bg-gray-900 text-gray-100 min-h-screen">
+<header class="p-4 neon-glow flex justify-between items-center">
+  <h1 class="text-xl font-bold text-green-300">AI Tools</h1>
+  <nav><a class="nav-link" href="index.html">Home</a></nav>
+</header>
+
+<main class="p-6 max-w-6xl mx-auto">
+  <div id="aiGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+    <div class="text-center text-gray-400 col-span-full">Loading AI tools...</div>
+  </div>
+</main>
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<script src="assets/js/firebase.js"></script>
+<script>
+const aiGrid = document.getElementById('aiGrid');
+const aiRef = firebase.database().ref('ai_tools');
+aiRef.on('value', snap => {
+  aiGrid.innerHTML = '';
+  const data = snap.val();
+  if(!data){ aiGrid.innerHTML = '<div class="text-center text-gray-400 col-span-full">No AI tools yet.</div>'; return; }
+  Object.keys(data).reverse().forEach(key => {
+    const item = data[key];
+    const card = document.createElement('div');
+    card.className = 'bg-gray-800 rounded-xl p-4 shadow-md';
+    card.innerHTML = `<h3 class="text-green-300 font-bold">${item.name||'Unnamed'}</h3>
+      <p class="text-sm text-gray-300 mt-2">${item.description||''}</p>
+      ${item.link? `<a target="_blank" href="${item.link}" class="inline-block mt-3 px-3 py-2 bg-green-600 rounded">Open</a>` : ''}`;
+    aiGrid.appendChild(card);
+  });
+});
+</script>
+</body>
+</html>

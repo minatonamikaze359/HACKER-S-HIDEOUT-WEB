@@ -1,0 +1,6 @@
+:root{ --green:#00ff66; }
+body { font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial; }
+.neon-glow { box-shadow: 0 6px 30px rgba(0,255,150,0.06); border-bottom:1px solid rgba(0,255,150,0.04); }
+.card { display:flex; align-items:center; justify-content:center; padding:2.5rem; border-radius:1rem; background:#0b0f0a; color:var(--green); font-weight:700; box-shadow: 0 8px 40px rgba(0,255,150,0.04); }
+a.nav-link { color:#9efc9e; text-decoration:underline; }
+.bg-glow { background: linear-gradient(90deg, rgba(0,255,150,0.06), transparent); }

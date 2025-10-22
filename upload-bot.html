@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Upload Bot — Hacker's Hideout</title>
+<link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body class="bg-gray-900 text-gray-100 min-h-screen">
+<header class="p-4 neon-glow"><h1 class="text-green-300 font-bold">Upload a Bot</h1></header>
+<main class="p-6 max-w-3xl mx-auto">
+  <form id="uploadForm" class="space-y-4 bg-gray-800 p-6 rounded-xl">
+    <input id="name" placeholder="Bot name" class="w-full p-3 rounded bg-gray-900"/>
+    <input id="link" placeholder="Bot link (optional)" class="w-full p-3 rounded bg-gray-900"/>
+    <input id="github" placeholder="Github repo (optional)" class="w-full p-3 rounded bg-gray-900"/>
+    <textarea id="description" placeholder="Short description" class="w-full p-3 rounded bg-gray-900"></textarea>
+    <button class="px-4 py-2 bg-green-600 rounded" type="submit">Upload (Public)</button>
+    <p id="msg" class="text-sm text-gray-400"></p>
+  </form>
+</main>
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<script src="assets/js/firebase.js"></script>
+<script>
+const form = document.getElementById('uploadForm');
+const msg = document.getElementById('msg');
+form.addEventListener('submit', e=>{
+  e.preventDefault();
+  const data = {
+    name: document.getElementById('name').value.trim(),
+    link: document.getElementById('link').value.trim(),
+    github: document.getElementById('github').value.trim(),
+    description: document.getElementById('description').value.trim(),
+    created_at: Date.now()
+  };
+  if(!data.name){ msg.textContent = 'Name required.'; return; }
+  const ref = firebase.database().ref('bots').push();
+  ref.set(data).then(()=>{
+    msg.textContent = 'Uploaded successfully. It is now public.';
+    form.reset();
+  }).catch(err=> msg.textContent = 'Failed: '+err.message);
+});
+</script>
+</body>
+</html>

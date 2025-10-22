@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Admin — Hacker's Hideout</title>
+<link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body class="bg-gray-900 text-gray-100 min-h-screen">
+<header class="p-4 neon-glow"><h1 class="text-green-300 font-bold">Admin Panel</h1></header>
+<main class="p-6 max-w-5xl mx-auto">
+  <div class="mb-4">
+    <input id="adminEmail" placeholder="Your email" class="p-3 rounded bg-gray-900 w-full"/>
+    <button id="adminLogin" class="mt-2 px-4 py-2 bg-green-600 rounded">Login (password is Tamim5151)</button>
+    <p id="loginMsg" class="text-sm text-gray-400 mt-2"></p>
+  </div>
+
+  <section id="adminArea" class="hidden">
+    <h2 class="text-lg font-bold text-green-300">Create new item</h2>
+    <select id="contentType" class="p-2 rounded bg-gray-900 mt-2">
+      <option value="bots">Bots</option>
+      <option value="ai_tools">AI Tools</option>
+      <option value="tools">Tools</option>
+    </select>
+    <div class="mt-3 space-y-2 bg-gray-800 p-4 rounded">
+      <input id="itemName" placeholder="Name" class="w-full p-2 rounded bg-gray-900"/>
+      <input id="itemLink" placeholder="Link (optional)" class="w-full p-2 rounded bg-gray-900"/>
+      <textarea id="itemDesc" placeholder="Description" class="w-full p-2 rounded bg-gray-900"></textarea>
+      <div class="flex gap-2">
+        <button id="createItem" class="px-4 py-2 bg-green-600 rounded">Create</button>
+        <button id="refreshList" class="px-4 py-2 border rounded">Refresh</button>
+      </div>
+    </div>
+
+    <h3 class="mt-6 text-green-300 font-bold">Existing items</h3>
+    <div id="itemsList" class="mt-2 grid grid-cols-1 gap-3"></div>
+  </section>
+</main>
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<script src="assets/js/firebase.js"></script>
+<script>
+const adminLoginBtn = document.getElementById('adminLogin');
+const adminEmailInput = document.getElementById('adminEmail');
+const loginMsg = document.getElementById('loginMsg');
+const adminArea = document.getElementById('adminArea');
+const itemsList = document.getElementById('itemsList');
+let currentUser = null;
+
+adminLoginBtn.addEventListener('click', async ()=>{
+  const email = adminEmailInput.value.trim();
+  if(!email){ loginMsg.textContent = 'Enter an email.'; return; }
+  const password = 'Tamim5151';
+  try{
+    // try sign in, if not exist create then sign in
+    await firebase.auth().signInWithEmailAndPassword(email, password);
+    loginMsg.textContent = 'Logged in.';
+    currentUser = firebase.auth().currentUser;
+    adminArea.classList.remove('hidden');
+    loadItems();
+  }catch(err){
+    if(err.code === 'auth/user-not-found'){
+      try{
+        await firebase.auth().createUserWithEmailAndPassword(email, password);
+        await firebase.auth().signInWithEmailAndPassword(email, password);
+        loginMsg.textContent = 'Account created and logged in.';
+        currentUser = firebase.auth().currentUser;
+        adminArea.classList.remove('hidden');
+        loadItems();
+      }catch(e){
+        loginMsg.textContent = 'Failed to create: '+e.message;
+      }
+    }else{
+      loginMsg.textContent = 'Login failed: '+err.message;
+    }
+  }
+});
+
+document.getElementById('createItem').addEventListener('click', ()=>{
+  const type = document.getElementById('contentType').value;
+  const name = document.getElementById('itemName').value.trim();
+  const link = document.getElementById('itemLink').value.trim();
+  const desc = document.getElementById('itemDesc').value.trim();
+  if(!name){ alert('Name required'); return; }
+  const ref = firebase.database().ref(type).push();
+  ref.set({ name, link, description: desc, created_at: Date.now() }).then(()=>{
+    alert('Created');
+    loadItems();
+  }).catch(e=> alert('Failed: '+e.message));
+});
+
+document.getElementById('refreshList').addEventListener('click', loadItems);
+
+function loadItems(){
+  itemsList.innerHTML = 'Loading...';
+  const type = document.getElementById('contentType').value;
+  firebase.database().ref(type).once('value').then(snap=>{
+    const data = snap.val();
+    itemsList.innerHTML = '';
+    if(!data){ itemsList.innerHTML = '<div class="text-gray-400">No items</div>'; return; }
+    Object.keys(data).reverse().forEach(key=>{
+      const it = data[key];
+      const el = document.createElement('div');
+      el.className = 'bg-gray-800 p-3 rounded flex justify-between items-center';
+      el.innerHTML = `<div>
+        <div class="font-bold text-green-300">${it.name}</div>
+        <div class="text-sm text-gray-300">${it.description||''}</div>
+      </div>
+      <div class="flex gap-2">
+        <button data-key="${key}" class="editBtn px-3 py-1 border rounded">Edit</button>
+        <button data-key="${key}" class="delBtn px-3 py-1 bg-red-600 rounded">Delete</button>
+      </div>`;
+      itemsList.appendChild(el);
+    });
+    document.querySelectorAll('.delBtn').forEach(b=> b.addEventListener('click', e=>{
+      const key = e.target.getAttribute('data-key');
+      const type = document.getElementById('contentType').value;
+      if(confirm('Delete?')) firebase.database().ref(type+'/'+key).remove().then(()=> loadItems());
+    }));
+    document.querySelectorAll('.editBtn').forEach(b=> b.addEventListener('click', e=>{
+      const key = e.target.getAttribute('data-key');
+      const type = document.getElementById('contentType').value;
+      firebase.database().ref(type+'/'+key).once('value').then(snap=>{
+        const it = snap.val();
+        document.getElementById('itemName').value = it.name||'';
+        document.getElementById('itemLink').value = it.link||'';
+        document.getElementById('itemDesc').value = it.description||'';
+        // after editing, override on create
+        document.getElementById('createItem').onclick = ()=>{
+          const name = document.getElementById('itemName').value.trim();
+          const link = document.getElementById('itemLink').value.trim();
+          const desc = document.getElementById('itemDesc').value.trim();
+          firebase.database().ref(type+'/'+key).set({ name, link, description: desc, updated_at: Date.now() }).then(()=>{
+            alert('Updated'); loadItems();
+            // restore create action
+            location.reload();
+          });
+        };
+      });
+    }));
+  });
+}
+</script>
+</body>
+</html>

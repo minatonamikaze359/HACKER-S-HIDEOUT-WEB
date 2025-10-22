@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en" class="dark">
+<head>
+<meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Bots — Hacker's Hideout</title>
+<link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body class="bg-gray-900 text-gray-100 min-h-screen">
+<header class="p-4 flex justify-between items-center neon-glow">
+  <h1 class="text-xl font-bold text-green-300">Explore Other Bots</h1>
+  <nav><a class="nav-link" href="index.html">Home</a> • <a class="nav-link" href="upload-bot.html">Upload a Bot</a></nav>
+</header>
+
+<main class="p-6 max-w-6xl mx-auto">
+  <div id="botsGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+    <div class="text-center text-gray-400 col-span-full">Loading bots...</div>
+  </div>
+</main>
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<script src="assets/js/firebase.js"></script>
+<script src="assets/js/main.js"></script>
+<script>
+// load bots from realtime db
+const botsGrid = document.getElementById('botsGrid');
+function renderBots(snapshot){
+  botsGrid.innerHTML = '';
+  if(!snapshot) {
+    botsGrid.innerHTML = '<div class="text-center text-gray-400 col-span-full">No bots yet.</div>';
+    return;
+  }
+  const data = snapshot.val();
+  if(!data){ botsGrid.innerHTML = '<div class="text-center text-gray-400 col-span-full">No bots yet.</div>'; return; }
+  Object.keys(data).reverse().forEach(key => {
+    const bot = data[key];
+    const card = document.createElement('div');
+    card.className = 'bg-gray-800 rounded-xl p-4 shadow-md';
+    card.innerHTML = `
+      <h3 class="text-green-300 text-lg font-bold">${bot.name || 'Unnamed'}</h3>
+      <p class="text-sm text-gray-300 mt-2">${bot.description || ''}</p>
+      <div class="mt-4 flex gap-2">
+        ${bot.link? `<a target="_blank" href="${bot.link}" class="px-3 py-2 bg-green-600 rounded">Open</a>` : ''}
+        ${bot.github? `<a target="_blank" href="${bot.github}" class="px-3 py-2 border rounded">Repo</a>` : ''}
+      </div>`;
+    botsGrid.appendChild(card);
+  });
+}
+
+const botsRef = firebase.database().ref('bots');
+botsRef.on('value', renderBots);
+</script>
+</body>
+</html>
